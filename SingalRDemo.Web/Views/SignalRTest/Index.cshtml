@@ -1,0 +1,73 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+}
+
+
+
+@section Scripts {
+    @*<script src="~/lib/microsoft-signalr/signalr.min.js"></script>*@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    <script type="text/javascript">
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("https://localhost:5001/phub")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+
+        $("#btnSend").click(() => {
+
+            let inputValue = $("#txtMsg").val();
+
+            connection.invoke("sendMessage", inputValue).catch((error) => {
+
+                console.log(error);
+            })
+
+        });
+        connection.on("RecieveMessage", (message) => {
+
+            var listItem = ` <li class="list-group-item">${message}</li>`;
+            $("#msjList").append(listItem);
+        
+        });
+
+        async function start() {
+            try {
+                await connection.start();
+                console.log("SignalR Connected.");
+            } catch (err) {
+                console.log(err);
+                setTimeout(start, 5000);
+            }
+        };
+        connection.onclose(async () => {
+            await start();
+        });
+
+
+        // Start the connection.
+        start();
+
+    </script>
+
+
+}
+
+
+<div class="row">
+    <div class="col-md-8 offset-2">
+        <input class="form-control" type="text" id="txtMsg"/>
+        <button class="btn btn-primary" id="btnSend">Send Message</button>
+    </div>
+    <br />
+    <hr />
+    <div class="col-md-8 offset-2">
+        <ul class="list-group" id="msjList">
+      
+        </ul>
+    </div>
+
+   
+</div>
